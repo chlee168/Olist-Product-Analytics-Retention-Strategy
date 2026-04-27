@@ -16,7 +16,6 @@ This project analyzes **100,000+ orders** to identify why customers churn and ho
 
 ## 📂 Project Structure
 *   `notebooks/`: Contains the end-to-end data cleaning and statistical analysis.
-*   `dashboard/`: The Power BI file used for executive reporting.
 *   `data/`: Cleaned dataset ready for visualization.
 
 ---
