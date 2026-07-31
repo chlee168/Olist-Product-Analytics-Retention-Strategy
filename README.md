@@ -6,9 +6,9 @@ This project analyzes **100,000+ orders** to identify why customers churn and ho
 The analysis is implemented twice: once in **Python/pandas** for exploration and statistical visualization, and once as a **SQL pipeline on Snowflake** to demonstrate the same logic in a cloud data warehouse.
 
 ## 🚀 Key Business Insights
-*   **Retention Cliff:** 95% of users churn after the first month (Month 2). The product is currently transactional, not habit-forming.
-*   **Logistics Anomaly:** Customers who churned experienced delivery delays **3 days longer** than repeat buyers. Logistics is a revenue driver.
-*   **Whale Risk:** 5% of users (Whales) contribute ~20% of revenue, suggesting a need for a VIP Loyalty Program.
+*   **Retention Cliff:** Only **5.2%** of a cohort returns in Month 2, and **97%** of customers (92,507 of 95,420) never place a second order at all. The product is transactional, not habit-forming.
+*   **Whale Concentration:** **8% of customers drive 36% of revenue** ($4.56M of $12.74M), at an AOV of $592 vs $86 for everyone else — a concentration risk that argues for a VIP retention program.
+*   **Logistics — a weak signal, not the smoking gun:** Repeat buyers received orders **0.75 days earlier** than one-time buyers (12.58 vs 11.83 days ahead of estimate). Both groups were delivered *early* on average, so delivery lateness does not explain the churn cliff. See the caveat below.
 *   **Salary Cycle Spikes:** Engagement peaks during the **first week of every month**, aligning with the Brazilian salary cycle. The single largest spike is **Black Friday 2017 (Nov 24)**.
 
 ## 🛠 Tech Stack
@@ -62,7 +62,9 @@ Porting the notebook surfaced patterns worth naming explicitly:
 | `.quantile(0.25)` | `PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY ...)` |
 | intermediate DataFrames | chained CTEs (`WITH ... AS`) |
 
-It also caught a bug. The notebook counted orders per customer with `('order_id', 'count')`, but the joined table is **item-level** — a single three-item order was counted as three orders, misclassifying one-time buyers as loyal. The SQL uses `COUNT(DISTINCT order_id)`, which raises the true one-time-buyer share. The conclusion holds; the number is now correct.
+It also caught a bug. The notebook counted orders per customer with `('order_id', 'count')`, but the joined table is **item-level** — a single three-item order was counted as three orders, misclassifying one-time buyers as loyal. Both implementations now use a distinct count (`COUNT(DISTINCT order_id)` / `nunique`).
+
+The fix mattered. It raised the true one-time-buyer share to 97% and shrank the delivery-performance gap between repeat and one-time buyers from ~1.7 days to 0.75 — weak enough that the original "late delivery causes churn" conclusion no longer stands. The corrected figures are the ones reported above.
 
 ---
 
@@ -71,8 +73,10 @@ It also caught a bug. The notebook counted orders per customer with `('order_id'
 ### 1. Cohort Retention Matrix
 I calculated the **Cohort Index** to align users from different years onto a single timeline. This revealed that Month 2 is the most critical window for re-engagement.
 
-### 2. Root Cause of Churn (Anomaly Detection)
-I correlated **Delivery Performance** with customer loyalty. The data proves that late deliveries are the #1 reason users do not return for a second purchase.
+### 2. Testing the Churn Hypothesis (Anomaly Detection)
+I correlated **Delivery Performance** with customer loyalty to test whether late shipping explains the retention cliff. It largely doesn't: repeat buyers were delivered 12.58 days ahead of the estimated date versus 11.83 for one-time buyers — a 0.75-day gap on a ~12-day cushion, with *both* groups arriving early on average.
+
+Two reasons to treat even that gap cautiously: the segments are wildly unequal (2,913 repeat vs 92,507 one-time buyers), and repeat buyers have more deliveries averaged into their score, which smooths out bad experiences. Reporting this honestly is more useful than the tidier story — it redirects attention toward the more likely explanation for a 97% one-time-buyer rate, which is that Olist is a marketplace people use for a specific need rather than a destination they return to.
 
 ### 3. DAU "Heartbeat" Analysis
 By analyzing daily activity, I proved that **purchasing power is cyclical**, peaking in the first 7 days of the month.
