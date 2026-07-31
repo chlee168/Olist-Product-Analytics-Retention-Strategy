@@ -62,16 +62,51 @@ SELECT
 FROM CLEAN.ORDERS_FEATURES
 GROUP BY 1;
 
--- Engagement clusters in the first week of the month, matching the
--- Brazilian salary cycle.
+-- Day-of-month engagement. Day 24 looks like a peak (190.3 vs a ~160
+-- baseline), which invites a "monthly salary cycle" story.
 SELECT DAY(order_date)    AS day_of_month,
        ROUND(AVG(dau), 1) AS avg_dau
 FROM CLEAN.DAU_TREND
 GROUP BY 1
 ORDER BY 1;
 
--- Largest spike is 2017-11-24, Black Friday.
+-- Largest single day is 2017-11-24, Black Friday: 1,151 users, ~7x baseline.
 SELECT order_date, dau
 FROM CLEAN.DAU_TREND
 ORDER BY dau DESC
 LIMIT 5;
+
+
+/* ---------- C2. Sensitivity check on the day-of-month "cycle" ----------
+   Before reporting a monthly pattern, test whether it survives removing
+   the Black Friday window. It does not: the peak moves from day 24 to
+   day 16, and the 22-28 bucket falls from 159.8 to 143.7.
+   ---------------------------------------------------------------------- */
+
+SELECT
+    CASE
+        WHEN DAY(order_date) BETWEEN  1 AND  7 THEN 'Days 01-07'
+        WHEN DAY(order_date) BETWEEN  8 AND 14 THEN 'Days 08-14'
+        WHEN DAY(order_date) BETWEEN 15 AND 21 THEN 'Days 15-21'
+        WHEN DAY(order_date) BETWEEN 22 AND 28 THEN 'Days 22-28'
+        ELSE                                        'Days 29-31'
+    END                                        AS week_bucket,
+    ROUND(AVG(dau), 1)                         AS avg_dau_all,
+    ROUND(AVG(CASE WHEN order_date NOT BETWEEN '2017-11-20' AND '2017-11-30'
+                   THEN dau END), 1)           AS avg_dau_excl_black_friday
+FROM CLEAN.DAU_TREND
+GROUP BY 1
+ORDER BY 1;
+
+-- Per-day view of the same test, plus a median. The median is
+-- outlier-resistant, and under it day 7 is the LOWEST day of the month --
+-- the opposite of a first-week salary-cycle peak.
+SELECT
+    DAY(order_date)                            AS day_of_month,
+    ROUND(AVG(dau), 1)                         AS mean_dau_all,
+    ROUND(AVG(CASE WHEN order_date NOT BETWEEN '2017-11-20' AND '2017-11-30'
+                   THEN dau END), 1)           AS mean_dau_excl_black_friday,
+    MEDIAN(dau)                                AS median_dau
+FROM CLEAN.DAU_TREND
+GROUP BY 1
+ORDER BY 1;

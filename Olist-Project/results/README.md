@@ -105,13 +105,14 @@ Against a ~160 baseline, that is a 7× single-day spike.
 
 ## Screenshots
 
-See [`screenshots/`](screenshots/). Suggested captures:
+Captured from Snowsight in [`screenshots/`](screenshots/):
 
-| Filename | What it shows |
+| File | What it shows |
 | --- | --- |
-| `01_database_explorer.png` | `OLIST_DB` object tree with the `RAW` and `CLEAN` schemas populated |
-| `02_query_results.png` | A worksheet with SQL and its result grid |
-| `03_query_history.png` | Query History — timestamped executions against real compute |
-| `04_warehouse.png` | Admin → Warehouses, showing `OLIST_WH` and its size/auto-suspend settings |
+| [`01_database_explorer.png`](screenshots/01_database_explorer.png) | `OLIST_DB` object tree — `RAW` and `CLEAN` schemas, 2 tables and 3 views |
+| [`02_query_results.png`](screenshots/02_query_results.png) | The `DAU_TREND` view and day-of-month query, 31 rows returned in 70ms |
+| [`03_query_history.png`](screenshots/03_query_history.png) | Query History — 23 timestamped executions with query IDs, on the `OLIST_WH` X-Small warehouse |
+| [`04_user_loyalty_view.png`](screenshots/04_user_loyalty_view.png) | The `USER_LOYALTY` view definition, showing the `COUNT(DISTINCT order_id)` fix |
 
-Capture these before the Snowflake trial expires; account access ends with it.
+The `AVG_DAU` values visible in `02_query_results.png` (160.3, 158.5, 154.0, 163.0, 152.7) match the
+pandas notebook exactly, confirming the two implementations agree.
