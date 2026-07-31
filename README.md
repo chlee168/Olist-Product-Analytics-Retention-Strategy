@@ -9,7 +9,7 @@ The analysis is implemented twice: once in **Python/pandas** for exploration and
 *   **Retention Cliff:** Only **5.2%** of a cohort returns in Month 2, and **97%** of customers (92,507 of 95,420) never place a second order at all. The product is transactional, not habit-forming.
 *   **Whale Concentration:** **8% of customers drive 36% of revenue** ($4.56M of $12.74M), at an AOV of $592 vs $86 for everyone else — a concentration risk that argues for a VIP retention program.
 *   **Logistics — a weak signal, not the smoking gun:** Repeat buyers received orders **0.75 days earlier** than one-time buyers (12.58 vs 11.83 days ahead of estimate). Both groups were delivered *early* on average, so delivery lateness does not explain the churn cliff. See the caveat below.
-*   **Salary Cycle Spikes:** Engagement peaks during the **first week of every month**, aligning with the Brazilian salary cycle. The single largest spike is **Black Friday 2017 (Nov 24)**.
+*   **No Monthly Cycle (a negative result):** I tested for a salary-cycle engagement pattern and found none — DAU varies only ~4% across the month. The apparent day-24 peak proved to be a single event, **Black Friday 2017**, which drove a 7× spike (1,151 users vs a ~160 baseline).
 
 ## 🛠 Tech Stack
 *   **Python:** Pandas (Data Engineering), Seaborn (Statistical Visualization).
@@ -19,6 +19,7 @@ The analysis is implemented twice: once in **Python/pandas** for exploration and
 ## 📂 Project Structure
 *   `notebooks/`: End-to-end data cleaning and statistical analysis in pandas.
 *   `sql/`: The Snowflake pipeline, numbered in execution order.
+*   `results/`: Query output and Snowsight screenshots.
 *   `data/`: Source and cleaned datasets.
 
 ---
@@ -79,4 +80,8 @@ I correlated **Delivery Performance** with customer loyalty to test whether late
 Two reasons to treat even that gap cautiously: the segments are wildly unequal (2,913 repeat vs 92,507 one-time buyers), and repeat buyers have more deliveries averaged into their score, which smooths out bad experiences. Reporting this honestly is more useful than the tidier story — it redirects attention toward the more likely explanation for a 97% one-time-buyer rate, which is that Olist is a marketplace people use for a specific need rather than a destination they return to.
 
 ### 3. DAU "Heartbeat" Analysis
-By analyzing daily activity, I proved that **purchasing power is cyclical**, peaking in the first 7 days of the month.
+I tested the hypothesis that purchasing power is cyclical, peaking early in the month with the Brazilian salary cycle. **The data does not support it.** Weekly averages run 158.2 / 157.8 / 163.7 / 159.8 — a spread of about 4%, with no first-week advantage. Under a median rather than a mean, day 7 is the *lowest* day of the month.
+
+Day 24 does average highest (190.3), but that is one event, not a pattern: excluding 20–30 November 2017 moves the peak to day 16 and drops the 22–28 week from 159.8 to 143.7. A single day — Black Friday, 2017-11-24, at 1,151 users against a ~160 baseline — was carrying the whole average.
+
+Full series in [`results/`](Olist-Project/results/README.md).
