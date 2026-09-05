@@ -8,7 +8,7 @@ The analysis is implemented twice: once in **Python/pandas** for exploration and
 ## 🚀 Key Business Insights
 *   **Retention Cliff:** Only **5.2%** of a cohort returns in Month 2, and **97%** of customers (92,507 of 95,420) never place a second order at all. The product is transactional, not habit-forming.
 *   **Whale Concentration:** **8% of customers drive 36% of revenue** ($4.56M of $12.74M), at an AOV of $592 vs $86 for everyone else — a concentration risk that argues for a VIP retention program.
-*   **Logistics — a weak signal, not the smoking gun:** Repeat buyers received orders **0.75 days earlier** than one-time buyers (12.58 vs 11.83 days ahead of estimate). Both groups were delivered *early* on average, so delivery lateness does not explain the churn cliff. See the caveat below.
+*   **Logistics — ** Repeat buyers received orders **0.75 days earlier** than one-time buyers (12.58 vs 11.83 days ahead of estimate). Both groups were delivered *early* on average, so delivery lateness does not explain the churn cliff. See the caveat below.
 *   **No Monthly Cycle (a negative result):** I tested for a salary-cycle engagement pattern and found none — DAU varies only ~4% across the month. The apparent day-24 peak proved to be a single event, **Black Friday 2017**, which drove a 7× spike (1,151 users vs a ~160 baseline).
 
 ## 🛠 Tech Stack
