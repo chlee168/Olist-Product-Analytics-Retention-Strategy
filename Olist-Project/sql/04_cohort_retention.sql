@@ -55,3 +55,32 @@ SELECT
 FROM CLEAN.COHORT_RETENTION
 GROUP BY cohort_month
 ORDER BY cohort_month;
+
+
+/* ---------- Month-2 retention: pool the counts, do not average the rates ----
+   Averaging the per-cohort rates gives 5.2%, and that number is an artifact.
+   The 2016-12 cohort contains exactly one customer, who happened to return --
+   a 100% rate that alone contributes 4.8pp to a 21-cohort mean.
+
+   Pooling the counts gives the real figure: 437 of 95,420 customers came
+   back in month 2, i.e. 0.46%. Every cohort large enough to mean anything
+   sits in a 0.22%-0.70% band, so the retention cliff is considerably
+   steeper than the averaged number suggested.
+
+   General rule: a ratio-of-averages is not the average ratio. Pool the
+   numerators and denominators whenever group sizes are unequal.
+   -------------------------------------------------------------------------- */
+SELECT
+    SUM(CASE WHEN cohort_index = 2 THEN n_customers END)  AS returned_in_month_2,
+    SUM(CASE WHEN cohort_index = 1 THEN n_customers END)  AS total_customers,
+    ROUND(100 * SUM(CASE WHEN cohort_index = 2 THEN n_customers END)
+              / SUM(CASE WHEN cohort_index = 1 THEN n_customers END), 2)
+                                                          AS month_2_retention_pct
+FROM CLEAN.COHORT_RETENTION;
+
+-- Per-cohort rates alongside cohort size, so a 1-customer cohort is never
+-- read as a trend. Cohorts below ~100 customers are noise, not signal.
+SELECT cohort_month, cohort_size, n_customers, retention_rate
+FROM CLEAN.COHORT_RETENTION
+WHERE cohort_index = 2
+ORDER BY cohort_size DESC;

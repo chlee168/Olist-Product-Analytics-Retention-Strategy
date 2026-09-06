@@ -13,8 +13,15 @@ CREATE SCHEMA IF NOT EXISTS CLEAN;
 CREATE OR REPLACE TABLE CLEAN.ORDERS_CLEAN AS
 WITH joined AS (
     -- DISTINCT removes exact duplicate rows introduced by the joins.
+    --
+    -- order_item_id MUST stay in the projection. It is the line-item key:
+    -- two units of the same product on one order are two legitimate rows
+    -- that differ only in this column. Dropping it before the DISTINCT
+    -- collapsed them into one, silently deleting 10,225 real line items
+    -- and $847,720 of revenue.
     SELECT DISTINCT
         o.order_id,
+        i.order_item_id,
         c.customer_unique_id,
         COALESCE(o.order_status, 'unknown')  AS order_status,
         o.order_purchase_timestamp,
@@ -58,7 +65,14 @@ CROSS JOIN bounds b;
 
 
 /* ---------- Verify ---------- */
+-- Expected: 112,650 rows | 98,666 orders | 95,420 customers
+--           $13,591,643.70 revenue | 8,427 outliers flagged
+-- Row count must equal RAW.ORDER_ITEMS: every line item survives, and the
+-- DISTINCT now removes nothing. If it drops below 112,650, the line-item
+-- key has gone missing again.
 SELECT COUNT(*)                                         AS total_rows,
+       COUNT(DISTINCT order_id)                         AS unique_orders,
        COUNT(DISTINCT customer_unique_id)               AS unique_customers,
+       ROUND(SUM(price), 2)                             AS total_revenue,
        SUM(CASE WHEN price_outlier THEN 1 ELSE 0 END)   AS outliers_flagged
 FROM CLEAN.ORDERS_CLEAN;
