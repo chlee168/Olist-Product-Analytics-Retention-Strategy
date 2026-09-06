@@ -67,22 +67,6 @@ Porting the notebook surfaced patterns worth naming explicitly:
 
 ---
 
-## 🧪 What the second implementation caught
-
-Writing the same analysis twice is not busywork. Reconciling the two versions exposed three defects, each of which had changed a reported number and two of which had changed a *conclusion*.
-
-**1. Item-level rows counted as orders.** The notebook counted orders per customer with `('order_id', 'count')`, but the joined table is item-level — a single three-item order was counted as three orders, misclassifying one-time buyers as loyal. Both implementations now use a distinct count (`COUNT(DISTINCT order_id)` / `nunique`).
-
-The fix mattered. It raised the true one-time-buyer share to 97% and shrank the delivery-performance gap between repeat and one-time buyers from ~1.7 days to 0.73 — weak enough that the original "late delivery causes churn" conclusion no longer stands.
-
-**2. The same grain error, a second time.** Re-auditing after the first fix turned up its twin. The column selection dropped `order_item_id` — the line-item key — before `drop_duplicates()`. Two units of the same product on one order differ *only* in that column, so they collapsed into one row and were discarded as duplicates: **10,225 genuine line items and $847,720 of revenue (6.2%)**, deleted silently. Total revenue is $13.59M, not the $12.74M reported earlier. Delivery performance is now averaged at the order level too, so a three-item order is not weighted 3× in a customer's score.
-
-**3. A headline metric that was an artifact.** "Average Month-2 retention: 5.2%" was the unweighted mean of the per-cohort rates. The 2016-12 cohort contains exactly **one** customer, who returned — a 100% rate that by itself contributes 4.8pp of that 5.2%. Pooling the counts instead gives **0.46%** (437 of 95,420), and every cohort large enough to mean anything sits in a 0.22%–0.70% band. A ratio-of-averages is not the average ratio.
-
-Two smaller corrections: the figure previously labelled AOV was the mean price of a single *line item*; true Average Order Value (order total ÷ order count) is **$137.75**, against an average item price of $83.97. And the customer-level whale segment, previously quoted without a query behind it, is now computed explicitly — under two independent definitions that agree to within 2pp.
-
----
-
 ## 🔍 Analytical Deep Dive
 
 ### 1. Cohort Retention Matrix
